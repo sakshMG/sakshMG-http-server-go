@@ -9,6 +9,26 @@ import (
 
 const CRLF = "\r\n"
 
+func headerToMap(lines []string) map[string]string {
+
+	mp := make(map[string]string)
+
+	for _, line := range lines[1:] {
+		if line == "" {
+			break
+		}
+
+		headerParts := strings.SplitN(line, ":", 2)
+		if len(headerParts) == 2 {
+			key := strings.TrimSpace(headerParts[0])
+			value := strings.TrimSpace(headerParts[1])
+			mp[key] = value
+		}
+	}
+	return mp
+
+}
+
 func do(conn net.Conn) {
 
 	buff := make([]byte, 1024)
@@ -23,29 +43,42 @@ func do(conn net.Conn) {
 	lines := strings.Split(req, CRLF)
 	path := strings.Split(lines[0], " ")[1]
 
-	// fmt.Println(lines)
+	headerMap := headerToMap(lines)
 
 	var res string
 
 	switch {
 
 	case path == "/":
-		res = "HTTP/1.1 200 OK\r\n\r\n"
+		res = "HTTP/1.1 200 OK" + CRLF + CRLF
 
 	case strings.HasPrefix(path, "/echo/"):
 
-		val, _ := strings.CutPrefix(path, "/echo/")
+		body, _ := strings.CutPrefix(path, "/echo/")
 
-		status := "HTTP/1.1 200 OK\r\n"
+		status := "HTTP/1.1 200 OK" + CRLF
 		header := fmt.Sprintf(
-			"Content-Type: text/plain\r\n"+
-				"Content-Length: %d\r\n\r\n", len(val),
+			"Content-Type: text/plain"+CRLF+
+
+				"Content-Length: %d"+CRLF+CRLF, len(body),
 		)
-		res = status + header + val
+		res = status + header + body
+
+	case strings.HasPrefix(path, "/user-agent"):
+
+		body := headerMap["User-Agent"]
+
+		status := "HTTP/1.1 200 OK" + CRLF
+		header := fmt.Sprintf(
+			"Content-Type: text/plain"+CRLF+
+
+				"Content-Length: %d"+CRLF+CRLF, len(body),
+		)
+
+		res = status + header + body
 
 	default:
-		res = "HTTP/1.1 404 Not Found\r\n\r\n"
-
+		res = "HTTP/1.1 404 Not Found" + CRLF + CRLF
 	}
 
 	conn.Write([]byte(res))

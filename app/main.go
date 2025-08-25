@@ -4,11 +4,38 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
-// Ensures gofmt doesn't remove the "net" and "os" imports above (feel free to remove this!)
-var _ = net.Listen
-var _ = os.Exit
+const CRLF = "\r\n"
+
+func do(conn net.Conn) {
+
+	buff := make([]byte, 1024)
+	_, err := conn.Read(buff)
+
+	if err != nil {
+		fmt.Println("Failed to read request")
+		os.Exit(1)
+	}
+
+	req := string(buff)
+	lines := strings.Split(req, CRLF)
+	path := strings.Split(lines[0], " ")[1]
+	fmt.Println(path)
+
+	var res string
+
+	if path == "/" {
+		res = "HTTP/1.1 200 OK\r\n\r\n"
+	} else {
+		res = "HTTP/1.1 404 Not Found\r\n\r\n"
+	}
+
+	// fmt.Println(url)
+	conn.Write([]byte(res))
+	conn.Close()
+}
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -27,5 +54,6 @@ func main() {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
-	conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+
+	do(conn)
 }

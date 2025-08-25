@@ -36,7 +36,7 @@ func do(conn net.Conn) {
 
 		val, _ := strings.CutPrefix(path, "/echo/")
 
-		status := "HTTP/1.1 200\r\n"
+		status := "HTTP/1.1 200 OK\r\n"
 		header := fmt.Sprintf(
 			"Content-Type: text/plain\r\n"+
 				"Content-Length: %d\r\n\r\n", len(val),

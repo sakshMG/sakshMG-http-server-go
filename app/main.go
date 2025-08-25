@@ -31,6 +31,7 @@ func headerToMap(lines []string) map[string]string {
 
 func do(conn net.Conn) {
 
+	defer conn.Close()
 	buff := make([]byte, 1024)
 	_, err := conn.Read(buff)
 
@@ -82,7 +83,6 @@ func do(conn net.Conn) {
 	}
 
 	conn.Write([]byte(res))
-	conn.Close()
 }
 
 func main() {
@@ -101,11 +101,11 @@ func main() {
 		conn, err := l.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
-			os.Exit(1)
+			continue
 		}
 
 		fmt.Println("Successful Connection")
-		do(conn)
+		go do(conn)
 
 	}
 

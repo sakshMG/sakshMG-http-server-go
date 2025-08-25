@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -45,6 +46,7 @@ func do(conn net.Conn) {
 
 	req := string(buff)
 	lines := strings.Split(req, CRLF)
+	method := strings.Split(lines[0], " ")[0]
 	path := strings.Split(lines[0], " ")[1]
 
 	headerMap := headerToMap(lines)
@@ -81,11 +83,10 @@ func do(conn net.Conn) {
 
 		res = status + header + body
 
-	case strings.HasPrefix(path, "/files/"):
+	case strings.HasPrefix(path, "/files/") && method == "GET":
 
 		fileName, _ := strings.CutPrefix(path, "/files/")
 
-		fmt.Println(fileName)
 		fileInfo, err := os.Stat(*filePath + "/" + fileName)
 
 		if err != nil {
@@ -101,6 +102,20 @@ func do(conn net.Conn) {
 				"Content-Length: %d"+CRLF+CRLF, fileInfo.Size(),
 		)
 		res = status + header + string(content)
+
+	case strings.HasPrefix(path, "/files/") && method == "POST":
+
+		fileName, _ := strings.CutPrefix(path, "/files/")
+
+		newPath := filepath.Join(*filePath, fileName)
+		newFile, _ := os.Create(newPath)
+
+		defer newFile.Close()
+
+		newFile.WriteString(lines[len(lines)-1])
+
+		status := "HTTP/1.1 201 Created" + CRLF + CRLF
+		res = status
 
 	default:
 		res = "HTTP/1.1 404 Not Found" + CRLF + CRLF

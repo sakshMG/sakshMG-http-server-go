@@ -1,11 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 )
+
+var filePath = flag.String("directory", "", "directory to serve files")
 
 const CRLF = "\r\n"
 
@@ -78,6 +81,27 @@ func do(conn net.Conn) {
 
 		res = status + header + body
 
+	case strings.HasPrefix(path, "/files/"):
+
+		fileName, _ := strings.CutPrefix(path, "/files/")
+
+		fmt.Println(fileName)
+		fileInfo, err := os.Stat(*filePath + "/" + fileName)
+
+		if err != nil {
+			res = "HTTP/1.1 404 Not Found" + CRLF + CRLF
+			break
+		}
+
+		content, _ := os.ReadFile(*filePath + "/" + fileName)
+		status := "HTTP/1.1 200 OK" + CRLF
+		header := fmt.Sprintf(
+			"Content-Type: application/octet-stream"+CRLF+
+
+				"Content-Length: %d"+CRLF+CRLF, fileInfo.Size(),
+		)
+		res = status + header + string(content)
+
 	default:
 		res = "HTTP/1.1 404 Not Found" + CRLF + CRLF
 	}
@@ -91,6 +115,8 @@ func main() {
 
 	// Uncomment this block to pass the first stage
 	//
+	flag.Parse()
+
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
 		fmt.Println("Failed to bind to port 4221")

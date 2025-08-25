@@ -112,7 +112,7 @@ func do(conn net.Conn) {
 
 		defer newFile.Close()
 
-		newFile.WriteString(lines[len(lines)-1])
+		newFile.WriteString(strings.TrimSpace(lines[len(lines)-1]))
 
 		status := "HTTP/1.1 201 Created" + CRLF + CRLF
 		res = status

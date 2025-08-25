@@ -22,7 +22,6 @@ func do(conn net.Conn) {
 	req := string(buff)
 	lines := strings.Split(req, CRLF)
 	path := strings.Split(lines[0], " ")[1]
-	fmt.Println(path)
 
 	var res string
 
@@ -32,7 +31,6 @@ func do(conn net.Conn) {
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
 	}
 
-	// fmt.Println(url)
 	conn.Write([]byte(res))
 	conn.Close()
 }

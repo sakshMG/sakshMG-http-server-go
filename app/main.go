@@ -23,12 +23,29 @@ func do(conn net.Conn) {
 	lines := strings.Split(req, CRLF)
 	path := strings.Split(lines[0], " ")[1]
 
+	// fmt.Println(lines)
+
 	var res string
 
-	if path == "/" {
+	switch {
+
+	case path == "/":
 		res = "HTTP/1.1 200 OK\r\n\r\n"
-	} else {
+
+	case strings.HasPrefix(path, "/echo/"):
+
+		val, _ := strings.CutPrefix(path, "/echo/")
+
+		status := "HTTP/1.1 200\r\n"
+		header := fmt.Sprintf(
+			"Content-Type: text/plain\r\n"+
+				"Content-Length: %d\r\n\r\n", len(val),
+		)
+		res = status + header + val
+
+	default:
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
+
 	}
 
 	conn.Write([]byte(res))

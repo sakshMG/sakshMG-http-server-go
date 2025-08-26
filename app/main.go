@@ -132,6 +132,7 @@ func do(conn net.Conn) {
 
 			// Check if client wants to close connection
 			if connHeader, ok := headerMap["Connection"]; ok && strings.ToLower(connHeader) == "close" {
+				res = strings.Replace(res, CRLF+CRLF, CRLF+"Connection: close"+CRLF+CRLF, 1)
 				conn.Write([]byte(res))
 				return
 			}
